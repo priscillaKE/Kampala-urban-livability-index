@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Kampala Urban Livability & Opportunity Index
 
 A data science project to rank Kampala neighborhoods/divisions based on a composite index of affordability, opportunity, and quality of life, with interactive, user-personalized dashboards.
@@ -61,3 +62,7 @@ MIT License.
 ---
 
 *This project is for learning and portfolio purposes. Data accuracy may vary depending on available sources.*
+=======
+# Kampala-urban-livability-index
+A data science project to rank Kampala neighbourhoods on affordability, opportunity, and quality of life
+>>>>>>> a7be4e66635c1eb2ae8d1a1866b45c1607ab26d3
