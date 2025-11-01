@@ -1,0 +1,9 @@
+id,name,lon,lat,type
+1,Kampala Primary School,32.5825,0.3476,primary
+2,Kampala High School,32.5775,0.3430,secondary
+3,Makerere University,32.5761,0.5440,university
+4,Nakawa Secondary,32.6194,0.3347,secondary
+5,Bwaise Primary,32.5560,0.3560,primary
+6,Entebbe Primary,32.4786,0.0647,primary
+7,Jinja Secondary,33.2032,0.4376,secondary
+8,Gulu High School,32.3019,2.7724,secondary
