@@ -4,6 +4,8 @@ import os
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point
+from streamlit_folium import st_folium
+import folium
 
 st.set_page_config(layout='wide', page_title='Kampala Urban Livability - Prototype')
 st.title('Kampala Urban Livability — Prototype Ingest & Map')
@@ -19,17 +21,24 @@ st.markdown(
 )
 
 use_sample = st.sidebar.checkbox('Use sample CSV (data/samples/schools.csv)', value=True)
-uploaded_file = st.sidebar.file_uploader('Or upload a CSV with lon,lat columns', type=['csv'])
+uploaded_file = st.sidebar.file_uploader('Or upload a CSV', type=['csv'])
+
+# Column mapping UI
+st.sidebar.markdown('### Column mapping')
+lon_col = st.sidebar.text_input('Longitude column name', value='lon')
+lat_col = st.sidebar.text_input('Latitude column name', value='lat')
+label_col = st.sidebar.text_input('Label column (optional)', value='name')
 
 shp_default = 'data/boundaries/uga_admbnda_adm2_ubos_20200824.shp'
 shp = st.sidebar.text_input('ADM2 shapefile path', value=shp_default)
 
 out_dir = 'data/processed'
 
-def run_ingest(csv_path, shp_path, outdir):
+def run_ingest(csv_path, shp_path, outdir, lon_col='lon', lat_col='lat'):
     adm2 = gpd.read_file(shp_path)
     pts = pd.read_csv(csv_path)
-    geometry = [Point(xy) for xy in zip(pts['lon'], pts['lat'])]
+    # create geometry using mapped columns
+    geometry = [Point(xy) for xy in zip(pts[lon_col], pts[lat_col])]
     pts_gdf = gpd.GeoDataFrame(pts, geometry=geometry, crs='EPSG:4326')
     if adm2.crs is None:
         adm2.set_crs(epsg=4326, inplace=True)
@@ -60,16 +69,23 @@ if st.button('Run ingest'):
         st.stop()
 
     with st.spinner('Running spatial join...'):
-        adm2_counts, pts_gdf = run_ingest(csv_path, shp, out_dir)
+        adm2_counts, pts_gdf = run_ingest(csv_path, shp, out_dir, lon_col=lon_col, lat_col=lat_col)
     st.success('Ingest complete — saved to data/processed/ingest_adm2_counts.geojson')
 
     st.subheader('Top ADM2 by count')
     st.dataframe(adm2_counts[['ADM2_EN','count']].sort_values('count', ascending=False).head(10))
 
-    st.subheader('Map (static)')
-    st.map(pts_gdf[['lat','lon']])
+    st.subheader('Map (interactive)')
+    # build folium map centered on points
+    center = [pts_gdf.geometry.y.mean(), pts_gdf.geometry.x.mean()]
+    m = folium.Map(location=center, zoom_start=11)
+    folium.GeoJson(adm2_counts.to_crs(epsg=4326).to_json(), name='ADM2').add_to(m)
+    for _, r in pts_gdf.iterrows():
+        popup = r.get(label_col, '') if label_col in pts_gdf.columns else ''
+        folium.CircleMarker(location=(r.geometry.y, r.geometry.x), radius=5, color='blue', fill=True, popup=popup).add_to(m)
+    st_folium(m, width=900, height=600)
 
-    st.markdown('To generate an interactive map (Folium), run `scripts/visualize_folium.py` or open `outputs/schools_map.html`.')
+    st.markdown('Interactive map saved to `outputs/schools_map.html` if you ran the standalone visualizer.')
 
 st.sidebar.markdown('''
 ### Notes
