@@ -23,11 +23,33 @@ st.markdown(
 use_sample = st.sidebar.checkbox('Use sample CSV (data/samples/schools.csv)', value=True)
 uploaded_file = st.sidebar.file_uploader('Or upload a CSV', type=['csv'])
 
-# Column mapping UI
+# dataset name for outputs
+dataset_name = st.sidebar.text_input('Dataset name (used to store outputs)', value='sample_schools')
+
+# Column mapping UI (auto-detected from CSV when available)
 st.sidebar.markdown('### Column mapping')
-lon_col = st.sidebar.text_input('Longitude column name', value='lon')
-lat_col = st.sidebar.text_input('Latitude column name', value='lat')
-label_col = st.sidebar.text_input('Label column (optional)', value='name')
+
+def _get_columns_from_file(uploaded_file_obj, sample=False):
+    try:
+        if uploaded_file_obj is not None:
+            df = pd.read_csv(uploaded_file_obj)
+        elif sample:
+            df = pd.read_csv('data/samples/schools.csv')
+        else:
+            return []
+        return list(df.columns)
+    except Exception:
+        return []
+
+cols = _get_columns_from_file(uploaded_file if uploaded_file is not None else None, sample=use_sample and uploaded_file is None)
+if cols:
+    lon_col = st.sidebar.selectbox('Longitude column name', options=cols, index=cols.index('lon') if 'lon' in cols else 0)
+    lat_col = st.sidebar.selectbox('Latitude column name', options=cols, index=cols.index('lat') if 'lat' in cols else 0)
+    label_col = st.sidebar.selectbox('Label column (optional)', options=[''] + cols, index=1 if 'name' in cols else 0)
+else:
+    lon_col = st.sidebar.text_input('Longitude column name', value='lon')
+    lat_col = st.sidebar.text_input('Latitude column name', value='lat')
+    label_col = st.sidebar.text_input('Label column (optional)', value='name')
 
 shp_default = 'data/boundaries/uga_admbnda_adm2_ubos_20200824.shp'
 shp = st.sidebar.text_input('ADM2 shapefile path', value=shp_default)
@@ -56,6 +78,7 @@ if st.button('Run ingest'):
     if use_sample and uploaded_file is None:
         csv_path = 'data/samples/schools.csv'
     elif uploaded_file is not None:
+        # write uploaded file to temp and also allow pandas reading for dropdowns
         tf = tempfile.NamedTemporaryFile(delete=False, suffix='.csv')
         tf.write(uploaded_file.read())
         tf.close()
@@ -68,9 +91,11 @@ if st.button('Run ingest'):
         st.error(f'ADM2 shapefile not found at {shp}')
         st.stop()
 
+    # create dataset-specific outdir
+    ds_out = os.path.join('data', 'processed', dataset_name)
     with st.spinner('Running spatial join...'):
-        adm2_counts, pts_gdf = run_ingest(csv_path, shp, out_dir, lon_col=lon_col, lat_col=lat_col)
-    st.success('Ingest complete — saved to data/processed/ingest_adm2_counts.geojson')
+        adm2_counts, pts_gdf = run_ingest(csv_path, shp, ds_out, lon_col=lon_col, lat_col=lat_col)
+    st.success(f'Ingest complete — saved to {ds_out}/ingest_adm2_counts.geojson')
 
     st.subheader('Top ADM2 by count')
     st.dataframe(adm2_counts[['ADM2_EN','count']].sort_values('count', ascending=False).head(10))

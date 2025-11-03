@@ -69,6 +69,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Ingest points CSV and spatial-join to ADM2 boundaries')
     parser.add_argument('--input', '-i', dest='input_csv', default='data/samples/schools.csv', help='Input CSV of points (must have lon,lat columns)')
     parser.add_argument('--shp', '-s', dest='shp', default='data/boundaries/uga_admbnda_adm2_ubos_20200824.shp', help='ADM2 shapefile path')
-    parser.add_argument('--outdir', '-o', dest='out_dir', default='data/processed', help='Output directory')
+    parser.add_argument('--outdir', '-o', dest='out_dir', default=None, help='Output directory (overrides --name)')
+    parser.add_argument('--name', '-n', dest='name', default='sample_schools', help='Dataset name; outputs saved to data/processed/<name> when --outdir not provided')
     args = parser.parse_args()
-    main(args.input_csv, args.shp, args.out_dir)
+    # determine outdir
+    if args.out_dir:
+        outdir = args.out_dir
+    else:
+        outdir = os.path.join('data', 'processed', args.name)
+    main(args.input_csv, args.shp, outdir)
