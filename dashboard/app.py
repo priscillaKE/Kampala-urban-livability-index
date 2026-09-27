@@ -27,6 +27,21 @@ def render_index_workspace() -> None:
     st.header("Livability index")
     st.caption("Compare area-level indicators with transparent directions and weights.")
 
+    st.info(
+        "This index is in development. The default five-area dataset is illustrative "
+        "sample data while the full Kampala dataset is being built."
+    )
+    with st.expander("Research focus", expanded=True):
+        st.markdown(
+            "**How do access, affordability, opportunity, and environmental conditions "
+            "shape livability across Kampala?**"
+        )
+        st.caption(
+            "Current workspace: transparent scoring and geospatial exploration. "
+            "Future releases will add documented population, affordability, and "
+            "service-access data."
+        )
+
     use_demo = st.checkbox(
         "Use illustrative sample data",
         value=True,
@@ -71,7 +86,13 @@ def render_index_workspace() -> None:
 
     result = calculate_livability_index(data, indicators, directions, weights)
     result = result.sort_values(["livability_rank", area_column])
-    st.caption(f"Source: {source_label}. Scores are relative to the uploaded data.")
+    if source_label == "Illustrative demo data":
+        st.warning(
+            "Illustrative results only. These scores demonstrate the index workflow "
+            "and are not a Kampala finding."
+        )
+    else:
+        st.caption(f"Source: {source_label}. Scores are relative to the uploaded data.")
 
     metric_columns = st.columns(3)
     metric_columns[0].metric("Areas", len(result))
