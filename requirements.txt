@@ -4,6 +4,7 @@ geopandas
 osmnx
 scikit-learn
 streamlit
+streamlit-folium
 folium
 plotly
 requests

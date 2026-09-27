@@ -6,6 +6,7 @@ import geopandas as gpd
 from shapely.geometry import Point
 from streamlit_folium import st_folium
 import folium
+from src.geospatial import aggregate_points_by_area
 
 st.set_page_config(layout='wide', page_title='Kampala Urban Livability - Prototype')
 st.title('Kampala Urban Livability — Prototype Ingest & Map')
@@ -57,19 +58,12 @@ shp = st.sidebar.text_input('ADM2 shapefile path', value=shp_default)
 out_dir = 'data/processed'
 
 def run_ingest(csv_path, shp_path, outdir, lon_col='lon', lat_col='lat'):
-    adm2 = gpd.read_file(shp_path)
-    pts = pd.read_csv(csv_path)
-    # create geometry using mapped columns
-    geometry = [Point(xy) for xy in zip(pts[lon_col], pts[lat_col])]
-    pts_gdf = gpd.GeoDataFrame(pts, geometry=geometry, crs='EPSG:4326')
-    if adm2.crs is None:
-        adm2.set_crs(epsg=4326, inplace=True)
-    else:
-        adm2 = adm2.to_crs(epsg=4326)
-    joined = gpd.sjoin(pts_gdf, adm2[['ADM2_EN','geometry']], how='left', predicate='within')
-    counts = joined.groupby('ADM2_EN').size().reset_index(name='count')
-    adm2_counts = adm2.merge(counts, on='ADM2_EN', how='left')
-    adm2_counts['count'] = adm2_counts['count'].fillna(0).astype(int)
+    adm2_counts, pts_gdf = aggregate_points_by_area(
+        csv_path,
+        shp_path,
+        longitude_column=lon_col,
+        latitude_column=lat_col,
+    )
     os.makedirs(outdir, exist_ok=True)
     adm2_counts.to_file(os.path.join(outdir, 'ingest_adm2_counts.geojson'), driver='GeoJSON')
     return adm2_counts, pts_gdf
