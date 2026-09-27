@@ -22,10 +22,45 @@ from src.index import calculate_livability_index
 
 st.set_page_config(page_title="Kampala Urban Livability Index", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    :root {
+        --ink: #12303a;
+        --muted: #5f7479;
+        --teal: #176b70;
+        --teal-soft: #e6f1ef;
+        --coral: #d36b4f;
+        --sand: #f7f3eb;
+        --line: #d8e2df;
+    }
+    .stApp { background: var(--sand); }
+    [data-testid="stHeader"] { background: transparent; }
+    [data-testid="stSidebar"] { background: #eef4f1; border-right: 1px solid var(--line); }
+    .hero {
+        padding: 2.2rem 2.4rem 2rem;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: linear-gradient(120deg, #e1efeb 0%, #f7f3eb 68%, #f4dfd5 100%);
+        margin-bottom: 1.5rem;
+    }
+    .hero-kicker { color: var(--coral); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+    .hero h1 { color: var(--ink); font-size: 2.4rem; line-height: 1.05; margin: 0.45rem 0 0.7rem; }
+    .hero p { color: var(--muted); font-size: 1.02rem; max-width: 720px; margin: 0; }
+    .status-chip { display: inline-block; margin-top: 1.1rem; padding: 0.38rem 0.7rem; border-radius: 999px; background: var(--teal); color: white; font-size: 0.78rem; font-weight: 700; }
+    .section-note { color: var(--muted); margin-top: -0.4rem; margin-bottom: 1rem; }
+    div[data-testid="stMetric"] { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem 1rem; }
+    div[data-testid="stMetricLabel"] { color: var(--muted); }
+    div[data-testid="stMetricValue"] { color: var(--ink); }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 def render_index_workspace() -> None:
     st.header("Livability index")
-    st.caption("Compare area-level indicators with transparent directions and weights.")
+    st.markdown('<p class="section-note">Compare area-level indicators with transparent directions and weights.</p>', unsafe_allow_html=True)
 
     st.info(
         "This index is in development. The default five-area dataset is illustrative "
@@ -131,7 +166,7 @@ def render_index_workspace() -> None:
 
 def render_map_workspace() -> None:
     st.header("Geospatial ingest")
-    st.caption("Assign uploaded point records to administrative areas and inspect the result on a map.")
+    st.markdown('<p class="section-note">Assign point records to administrative areas and inspect the result on a map.</p>', unsafe_allow_html=True)
 
     use_sample = st.checkbox("Use sample school data", value=True)
     uploaded_file = st.file_uploader("Upload point CSV", type="csv", key="point_csv")
@@ -183,8 +218,17 @@ def render_map_workspace() -> None:
         st_folium(fmap, use_container_width=True, height=600)
 
 
-st.title("Kampala Urban Livability Index")
-st.caption("A transparent workspace for comparing documented indicators across Kampala areas.")
+st.markdown(
+    """
+    <section class="hero">
+        <div class="hero-kicker">Urban evidence lab / Kampala</div>
+        <h1>Kampala Urban Livability Index</h1>
+        <p>Exploring how access, affordability, opportunity, and environmental conditions shape livability across Kampala.</p>
+        <span class="status-chip">Index in development</span>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
 index_tab, map_tab = st.tabs(["Index workspace", "Geospatial ingest"])
 with index_tab:
     render_index_workspace()
